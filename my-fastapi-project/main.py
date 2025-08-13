@@ -9,6 +9,7 @@ app = FastAPI()
 # The URL below is the correct one based on your screenshot.
 origins = [
     "https://my-lotteryapi-frontend.onrender.com",
+    "https://seale.dev"  # Added your custom domain
 ]
 
 app.add_middleware(
