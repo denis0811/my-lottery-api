@@ -1,39 +1,93 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-import random
+import React, { useState, useEffect } from 'react';
 
-app = FastAPI()
+// Main App component
+export default function App() {
+  const [mainNumbers, setMainNumbers] = useState([]);
+  const [luckyStars, setLuckyStars] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-# Add CORS middleware to allow requests from your front-end domain.
-# This is crucial for security and to allow your front end to talk to your API.
-# Replace the URL below with your actual Render front-end URL.
-origins = [
-    "https://my-lottery-frontend.onrender.com",  # Example URL, replace with your own
-]
+  // Function to fetch lottery numbers from the API
+  const fetchLotteryNumbers = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // NOTE: You must replace this URL with the actual URL of your deployed Python API.
+      const response = await fetch('https://my-lottery-api.onrender.com/api/lottery-numbers');
+      if (!response.ok) {
+        throw new Error('Failed to fetch lottery numbers.');
+      }
+      const data = await response.json();
+      // The API now returns two keys: main_numbers and lucky_stars
+      setMainNumbers(data.main_numbers);
+      setLuckyStars(data.lucky_stars);
+    } catch (err) {
+      setError(err.message);
+      console.error("Fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+  // Fetch numbers when the component first mounts
+  useEffect(() => {
+    fetchLotteryNumbers();
+  }, []);
 
-@app.get("/api/lottery-numbers")
-def get_lottery_numbers():
-    # Simulated pool of frequently drawn EuroMillions numbers (based on historical data)
-    frequent_main_numbers = [4, 19, 23, 25, 27, 28, 29, 31, 34, 38, 42, 44, 46, 48, 50]
-    frequent_lucky_stars = [2, 3, 5, 8, 9, 11]
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-500 to-purple-600 flex flex-col items-center justify-center p-4 font-sans text-white">
+      <div className="bg-white/10 backdrop-blur-md p-8 sm:p-12 rounded-3xl shadow-2xl max-w-lg w-full text-center border border-white/20">
+        <h1 className="text-4xl sm:text-5xl font-bold mb-4 animate-fade-in">EuroMillions Number Generator</h1>
+        <p className="text-lg sm:text-xl font-light mb-8 opacity-90 animate-fade-in-delay">Powered by a Python API</p>
 
-    # Randomly select 5 unique main numbers from the pool
-    main_numbers = random.sample(frequent_main_numbers, 5)
+        {loading ? (
+          <div className="flex justify-center items-center h-24">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-4 border-indigo-200 border-opacity-50"></div>
+          </div>
+        ) : error ? (
+          <div className="text-red-300 font-semibold text-lg mb-8">
+            Error: {error}
+          </div>
+        ) : (
+          <div>
+            <h2 className="text-2xl font-semibold mb-4">Main Numbers</h2>
+            <div className="flex flex-wrap justify-center gap-4 mb-10">
+              {mainNumbers.map((number, index) => (
+                <div
+                  key={index}
+                  className="bg-white text-purple-600 font-bold text-3xl sm:text-4xl w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-full shadow-lg transform hover:scale-110 transition-transform duration-300 ease-in-out cursor-pointer"
+                >
+                  {number}
+                </div>
+              ))}
+            </div>
+            <h2 className="text-2xl font-semibold mb-4">Lucky Stars</h2>
+            <div className="flex flex-wrap justify-center gap-4 mb-10">
+              {luckyStars.map((number, index) => (
+                <div
+                  key={index}
+                  className="bg-purple-800 text-white font-bold text-3xl sm:text-4xl w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-full shadow-lg transform hover:scale-110 transition-transform duration-300 ease-in-out cursor-pointer"
+                >
+                  {number}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-    # Randomly select 2 unique Lucky Star numbers from the pool
-    lucky_stars = random.sample(frequent_lucky_stars, 2)
-
-    # Sort for neatness
-    main_numbers.sort()
-    lucky_stars.sort()
-    
-    # Return a dictionary with both number sets, which FastAPI will automatically convert to JSON.
-    return {"main_numbers": main_numbers, "lucky_stars": lucky_stars}
+        <button
+          onClick={fetchLotteryNumbers}
+          disabled={loading}
+          className={`
+            w-full py-4 px-8 font-bold rounded-full text-lg sm:text-xl
+            transition-all duration-300 ease-in-out
+            shadow-lg transform hover:scale-105
+            ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-white text-indigo-600 hover:bg-indigo-50'}
+          `}
+        >
+          {loading ? 'Fetching...' : 'Generate New Numbers'}
+        </button>
+      </div>
+    </div>
+  );
+}

@@ -1,22 +1,15 @@
-# To run this API, you need to install FastAPI and Uvicorn:
-# pip install "fastapi[all]" uvicorn
-
-import random
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List
+import random
 
-# Create a FastAPI instance
-app = FastAPI(title="Lottery Number Generator API", version="1.0.0")
+app = FastAPI()
 
-# Pydantic model for the response body
-class LotteryNumbers(BaseModel):
-    numbers: List[int]
-
-# Define CORS settings to allow your React front end to connect
-# NOTE: In a production environment, you should replace "*" with the specific URL of your React app.
-origins = ["*"]  # This allows all origins, which is good for testing.
+# Add CORS middleware to allow requests from your front-end domain.
+# This is crucial for security and to allow your front end to talk to your API.
+# The URL below is the correct one based on your screenshot.
+origins = [
+    "https://my-lotteryapi-frontend.onrender.com",
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,18 +19,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Root endpoint for a simple health check
-@app.get("/")
-def read_root():
-    """A simple health check endpoint."""
-    return {"message": "Welcome to the Lottery Number API!"}
-
-# Endpoint to generate lottery numbers
-@app.get("/api/lottery-numbers", response_model=LotteryNumbers)
+@app.get("/api/lottery-numbers")
 def get_lottery_numbers():
-    """Generates and returns a list of 5 random numbers between 1 and 50."""
-    numbers = random.sample(range(1, 51), 5)
-    return {"numbers": numbers}
+    # Simulated pool of frequently drawn EuroMillions numbers (based on historical data)
+    frequent_main_numbers = [4, 19, 23, 25, 27, 28, 29, 31, 34, 38, 42, 44, 46, 48, 50]
+    frequent_lucky_stars = [2, 3, 5, 8, 9, 11]
 
-# To run this API locally, use the following command in your terminal:
-# uvicorn main:app --reload
+    # Randomly select 5 unique main numbers from the pool
+    main_numbers = random.sample(frequent_main_numbers, 5)
+
+    # Randomly select 2 unique Lucky Star numbers from the pool
+    lucky_stars = random.sample(frequent_lucky_stars, 2)
+
+    # Sort for neatness
+    main_numbers.sort()
+    lucky_stars.sort()
+    
+    # Return a dictionary with both number sets, which FastAPI will automatically convert to JSON.
+    return {"main_numbers": main_numbers, "lucky_stars": lucky_stars}
