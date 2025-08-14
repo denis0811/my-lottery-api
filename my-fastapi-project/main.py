@@ -9,7 +9,7 @@ app = FastAPI()
 # The URL below is the correct one based on your screenshot.
 origins = [
     "https://my-lotteryapi-frontend.onrender.com",
-    "https://seale.dev"  # Added your custom domain
+    "https://seale.dev" 
 ]
 
 app.add_middleware(
@@ -20,6 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# This is the important part - the endpoint definition.
 @app.get("/api/lottery-numbers")
 def get_lottery_numbers():
     # Simulated pool of frequently drawn EuroMillions numbers (based on historical data)
