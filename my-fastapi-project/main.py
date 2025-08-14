@@ -4,9 +4,14 @@ import random
 
 app = FastAPI()
 
-# Temporarily allow all origins for debugging purposes.
-# WARNING: This is not recommended for production environments.
-origins = ["*"]
+# Add CORS middleware to allow requests from your front-end domain.
+# This is crucial for security and to allow your front end to talk to your API.
+# The URL below is the correct one based on your screenshot.
+origins = [
+    "https://my-lotteryapi-frontend.onrender.com",
+    "https://seale.dev",
+    "https://www.seale.dev" # Adding the www subdomain for good measure
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -16,6 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# This is the important part - the endpoint definition.
 @app.get("/api/lottery-numbers")
 def get_lottery_numbers():
     # Simulated pool of frequently drawn EuroMillions numbers (based on historical data)
